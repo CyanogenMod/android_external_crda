@@ -9,13 +9,14 @@ LOCAL_SRC_FILES := \
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH) \
-	external/libnl/include \
+	external/libnl-headers \
 	external/openssl/include
 
-LOCAL_CFLAGS := -DUSE_SSL -DPUBKEY_DIR=\"\"
+LOCAL_CFLAGS := -DUSE_SSL -DPUBKEY_DIR=\"\" -DCONFIG_LIBNL20
 
 LOCAL_MODULE_TAGS := eng
-LOCAL_SHARED_LIBRARIES := libnl libcrypto
+LOCAL_SHARED_LIBRARIES := libcrypto
+LOCAL_STATIC_LIBRARIES := libnl_2
 LOCAL_MODULE := crda
 
 include $(BUILD_EXECUTABLE)
@@ -30,13 +31,14 @@ LOCAL_SRC_FILES := \
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH) \
-	external/libnl/include \
+	external/libnl-headers \
 	external/openssl/include
 
-LOCAL_CFLAGS := -DUSE_SSL -DPUBKEY_DIR=\"\"
+LOCAL_CFLAGS := -DUSE_SSL -DPUBKEY_DIR=\"\" -DCONFIG_LIBNL20
 
-LOCAL_MODULE_TAGS := optional
-LOCAL_SHARED_LIBRARIES := libnl libcrypto
+LOCAL_MODULE_TAGS := eng
+LOCAL_SHARED_LIBRARIES := libcrypto
+LOCAL_STATIC_LIBRARIES := libnl_2
 LOCAL_MODULE := regdbdump
 
 include $(BUILD_EXECUTABLE)
