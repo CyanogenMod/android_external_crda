@@ -318,14 +318,8 @@ int main(int argc, char **argv)
 	nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, wait_handler, &finished);
 	nl_cb_err(cb, NL_CB_CUSTOM, error_handler, NULL);
 
-	if (!finished) {
-		r = nl_wait_for_ack(nlstate.nl_sock);
-		if (r < 0) {
-			fprintf(stderr, "Failed to set regulatory domain: "
-				"%d\n", r);
-			goto cb_out;
-		}
-	}
+	while(!finished)
+		nl_recvmsgs(nlstate.nl_sock, cb);
 
 cb_out:
 	nl_cb_put(cb);
