@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <limits.h>
 #include "reglib.h"
 
 #ifdef USE_OPENSSL

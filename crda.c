@@ -163,6 +163,7 @@ int main(int argc, char **argv)
 	int num_rules;
 
 	const char *regdb_paths[] = {
+                "/persist/regulatory.bin",
 		"/usr/local/lib/crda/regulatory.bin", /* Users/preloads can override */
 		"/usr/lib/crda/regulatory.bin", /* General distribution package usage */
 		"/lib/crda/regulatory.bin", /* alternative for distributions */
