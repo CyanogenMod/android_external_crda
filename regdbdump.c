@@ -32,7 +32,8 @@ int main(int argc, char **argv)
 
 	if (fstat(fd, &stat)) {
 		perror("failed to fstat db file");
-		return 2;
+		r = 2;
+		goto out;
 	}
 
 	dblen = stat.st_size;
@@ -40,19 +41,22 @@ int main(int argc, char **argv)
 	db = mmap(NULL, dblen, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (db == MAP_FAILED) {
 		perror("failed to mmap db file");
-		return 2;
+		r = 2;
+		goto out;
 	}
 
 	header = crda_get_file_ptr(db, dblen, sizeof(*header), 0);
 
 	if (ntohl(header->magic) != REGDB_MAGIC) {
 		fprintf(stderr, "Invalid database magic\n");
-		return 2;
+		r = 2;
+		goto out;
 	}
 
 	if (ntohl(header->version) != REGDB_VERSION) {
 		fprintf(stderr, "Invalid database version\n");
-		return 2;
+		r = 2;
+		goto out;
 	}
 
 	siglen = ntohl(header->signature_length);
@@ -61,12 +65,15 @@ int main(int argc, char **argv)
 
 	if (dblen <= (int)sizeof(*header)) {
 		fprintf(stderr, "Invalid signature length %d\n", siglen);
-		return 2;
+		r = 2;
+		goto out;
 	}
 
 	/* verify signature */
-	if (!crda_verify_db_signature(db, dblen, siglen))
-		return -EINVAL;
+	if (!crda_verify_db_signature(db, dblen, siglen)) {
+		r = -EINVAL;
+		goto out;
+	}
 
 	num_countries = ntohl(header->reg_country_num);
 	countries = crda_get_file_ptr(db, dblen,
@@ -90,5 +97,6 @@ int main(int argc, char **argv)
 
 	}
 out:
+	close(fd);
 	return r;
 }

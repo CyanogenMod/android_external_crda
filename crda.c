@@ -204,7 +204,8 @@ int main(int argc, char **argv)
 
 	if (fstat(fd, &stat)) {
 		perror("failed to fstat db file");
-		return -EIO;
+		r = -EIO;
+		goto close_fd_out;
 	}
 
 	dblen = stat.st_size;
@@ -212,7 +213,8 @@ int main(int argc, char **argv)
 	db = mmap(NULL, dblen, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (db == MAP_FAILED) {
 		perror("failed to mmap db file");
-		return -EIO;
+		r = -EIO;
+		goto close_fd_out;
 	}
 
 	/* db file starts with a struct regdb_file_header */
@@ -220,12 +222,14 @@ int main(int argc, char **argv)
 
 	if (ntohl(header->magic) != REGDB_MAGIC) {
 		fprintf(stderr, "Invalid database magic\n");
-		return -EINVAL;
+		r = -EINVAL;
+		goto close_fd_out;
 	}
 
 	if (ntohl(header->version) != REGDB_VERSION) {
 		fprintf(stderr, "Invalid database version\n");
-		return -EINVAL;
+		r = -EINVAL;
+		goto close_fd_out;
 	}
 
 	siglen = ntohl(header->signature_length);
@@ -234,12 +238,15 @@ int main(int argc, char **argv)
 
 	if (dblen <= (int)sizeof(*header)) {
 		fprintf(stderr, "Invalid signature length %d\n", siglen);
-		return -EINVAL;
+		r = -EINVAL;
+		goto close_fd_out;
 	}
 
 	/* verify signature */
-	if (!crda_verify_db_signature(db, dblen, siglen))
-		return -EINVAL;
+	if (!crda_verify_db_signature(db, dblen, siglen)) {
+		r = -EINVAL;
+		goto close_fd_out;
+	}
 
 	num_countries = ntohl(header->reg_country_num);
 	countries = crda_get_file_ptr(db, dblen,
@@ -256,12 +263,15 @@ int main(int argc, char **argv)
 
 	if (!found_country) {
 		fprintf(stderr, "No country match in regulatory database.\n");
-		return -1;
+		r = -1;
+		goto close_fd_out;
 	}
 
 	r = nl80211_init(&nlstate);
-	if (r)
-		return -EIO;
+	if (r) {
+		r = -EIO;
+		goto close_fd_out;
+	}
 
 	msg = nlmsg_alloc();
 	if (!msg) {
@@ -328,5 +338,9 @@ nla_put_failure:
 	nlmsg_free(msg);
 out:
 	nl80211_cleanup(&nlstate);
+	close(fd);
+	return r;
+close_fd_out:
+	close(fd);
 	return r;
 }
